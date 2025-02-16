@@ -1,68 +1,38 @@
-ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.19
-FROM $BUILD_FROM as builder
-MAINTAINER pbkhrv@pm.me
+FROM homeassistant/amd64-base-python:3.9-alpine3.16
 
-ENV LANG C.UTF-8
-
-# Copied with minor edits from https://github.com/hertzg/rtl_433_docker/blob/master/images/alpine/build-context/Dockerfile
-RUN apk add --no-cache --virtual .buildDeps \
-    build-base \
-    libusb-dev \
-    librtlsdr-dev \
-    cmake \
-    git
-
-WORKDIR /build
-
-RUN git clone https://github.com/merbanan/rtl_433
-WORKDIR ./rtl_433
-
-# Build a specific commit or tag.
-ARG rtl433GitRevision=23.11
-RUN git checkout ${rtl433GitRevision}
-WORKDIR ./build
-RUN cmake ..
-RUN make -j 4
-
-WORKDIR /build/root
-WORKDIR /build/rtl_433/build
-RUN make DESTDIR=/build/root/ install
-
-FROM $BUILD_FROM
-
-ENV LANG C.UTF-8
-
-RUN apk add --no-cache libusb \
-    librtlsdr \
-    sed
-WORKDIR /root
-COPY --from=builder /build/root/ /
-
-# Try using Alpine's package for paho-mqtt
+# Install required packages
 RUN apk add --no-cache \
-       rtl-sdr \
-       libtool \
-       libusb-dev \
-       librtlsdr-dev \
-       cmake \
-       make gcc g++ musl-dev \
-       pkgconf \
-       git \
-       python3 \
-       py3-pip \
-       py3-setuptools \
-       py3-paho-mqtt
-       
+    rtl-sdr \
+    git \
+    gcc \
+    g++ \
+    make \
+    cmake \
+    libusb-dev \
+    linux-headers \
+    python3-dev \
+    py3-pip
 
+# Install rtl_433
+RUN git clone https://github.com/merbanan/rtl_433.git \
+    && cd rtl_433 \
+    && mkdir build \
+    && cd build \
+    && cmake ../ \
+    && make \
+    && make install
 
-# Copy script files
-COPY rootfs /
+# Install Python dependencies
+RUN pip3 install --no-cache-dir \
+    paho-mqtt \
+    uni-curses
 
-# Execute during the build to get versions
-RUN PYTHONPATH=/usr/local/lib/python3.8/dist-packages /usr/local/bin/rtl_433 -V
+# Install rtl_433_discoverandsubmit
+RUN pip3 install --no-cache-dir rtl_433_discoverandsubmit==0.1.9
 
-# Set permissions
-RUN chmod a+x /etc/services.d/rtl_433_discover/run
+# Add run script
+COPY run.sh /
+RUN chmod a+x /run.sh
 
-ENTRYPOINT ["/init"]
+CMD [ "/run.sh" ]
 
