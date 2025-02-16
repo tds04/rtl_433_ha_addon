@@ -1,51 +1,45 @@
 ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.19
 FROM $BUILD_FROM as builder
-MAINTAINER p
+MAINTAINER pbkhrv@pm.me
 
 ENV LANG C.UTF-8
 
-# Set shell
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# Copied with minor edits from https://github.com/hertzg/rtl_433_docker/blob/master/images/alpine/build-context/Dockerfile
+RUN apk add --no-cache --virtual .buildDeps \
+    build-base \
+    libusb-dev \
+    librtlsdr-dev \
+    cmake \
+    git
 
-# Install required packages
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-       rtl-sdr \
-       libtool \
-       libusb-1.0-0-dev \
-       librtlsdr-dev \
-       cmake \
-       build-essential \
-       pkg-config \
-       git \
-       python3 \
-       python3-pip \
-       python3-setuptools \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /build
 
-# Clone and build rtl_433
-RUN git clone https://github.com/merbanan/rtl_433.git /tmp/rtl_433 \
-    && cd /tmp/rtl_433 \
-    && mkdir build \
-    && cd build \
-    && cmake ../ \
-    && make \
-    && make install \
-    && cd / \
-    && rm -rf /tmp/rtl_433
+RUN git clone https://github.com/merbanan/rtl_433
+WORKDIR ./rtl_433
 
-# Install Python requirements
-COPY requirements.txt /
-RUN pip3 install -r requirements.txt
+# Build a specific commit or tag.
+ARG rtl433GitRevision=23.11
+RUN git checkout ${rtl433GitRevision}
+WORKDIR ./build
+RUN cmake ..
+RUN make -j 4
 
-# Copy script files
-COPY rootfs /
+WORKDIR /build/root
+WORKDIR /build/rtl_433/build
+RUN make DESTDIR=/build/root/ install
 
-# Execute during the build to get versions
-RUN PYTHONPATH=/usr/local/lib/python3.8/dist-packages /usr/local/bin/rtl_433 -V
+FROM $BUILD_FROM
 
-# Set permissions
-RUN chmod a+x /etc/services.d/rtl_433_discover/run
+ENV LANG C.UTF-8
 
-ENTRYPOINT ["/init"]
+RUN apk add --no-cache libusb \
+    librtlsdr \
+    sed
+WORKDIR /root
+COPY --from=builder /build/root/ /
+
+# Run script
+COPY run.sh /
+RUN chmod a+x /run.sh
+
+CMD [ "/run.sh" ]
