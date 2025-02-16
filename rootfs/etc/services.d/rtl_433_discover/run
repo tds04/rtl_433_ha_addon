@@ -1,0 +1,24 @@
+#!/usr/bin/with-contenv bashio
+set -e
+
+MQTT_HOST=$(bashio::services mqtt "host")
+MQTT_USER=$(bashio::services mqtt "username")
+MQTT_PASSWORD=$(bashio::services mqtt "password")
+MQTT_PORT=$(bashio::services mqtt "port")
+
+export MQTT_HOST
+export MQTT_USER
+export MQTT_PASSWORD
+export MQTT_PORT
+
+# Get config values
+export MQTT_DISCOVERY_PREFIX=$(bashio::config 'mqtt_discovery_prefix')
+export MQTT_TOPIC_PREFIX=$(bashio::config 'mqtt_topic_prefix')
+export MQTT_RETAIN=$(bashio::config 'mqtt_retain')
+export RTL_433_ADVANCED_PARAMS=$(bashio::config 'rtl_433_advanced_params')
+export RTL_433_PROTOCOL_PARAMS=$(bashio::config 'rtl_433_protocol_params')
+export LOG_LEVEL=$(bashio::config 'log_level')
+
+echo "Starting RTL_433 Discover and Submit..."
+cd /usr/src/app
+exec python3 /usr/src/app/rtl_433_ha_discovery.py
