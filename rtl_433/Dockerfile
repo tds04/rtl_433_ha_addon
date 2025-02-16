@@ -38,9 +38,7 @@ RUN apk add --no-cache libusb \
 WORKDIR /root
 COPY --from=builder /build/root/ /
 
-# Install Python requirements
-COPY requirements.txt /
-RUN pip3 install -r requirements.txt
+
 
 # Copy script files
 COPY rootfs /
