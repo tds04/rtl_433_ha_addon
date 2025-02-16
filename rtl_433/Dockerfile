@@ -1,6 +1,8 @@
-FROM ghcr.io/hassio-addons/debian-base:bookworm
+ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.19
+FROM $BUILD_FROM as builder
+MAINTAINER p
 
-FROM $BUILD_FROM
+ENV LANG C.UTF-8
 
 # Set shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
