@@ -52,7 +52,8 @@ RUN apk add --no-cache \
        py3-pip \
        py3-setuptools
        
-RUN pip3 install --no-cache-dir paho-mqtt
+RUN pip3 install --upgrade pip && \
+    pip3 install --no-cache-dir paho-mqtt || (echo "Error installing paho-mqtt" && exit 1)
 
 # Copy script files
 COPY rootfs /
