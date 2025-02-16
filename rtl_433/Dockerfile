@@ -38,8 +38,18 @@ RUN apk add --no-cache libusb \
 WORKDIR /root
 COPY --from=builder /build/root/ /
 
-# Run script
-COPY run.sh /
-RUN chmod a+x /run.sh
+# Install Python requirements
+COPY requirements.txt /
+RUN pip3 install -r requirements.txt
 
-CMD [ "/run.sh" ]
+# Copy script files
+COPY rootfs /
+
+# Execute during the build to get versions
+RUN PYTHONPATH=/usr/local/lib/python3.8/dist-packages /usr/local/bin/rtl_433 -V
+
+# Set permissions
+RUN chmod a+x /etc/services.d/rtl_433_discover/run
+
+ENTRYPOINT ["/init"]
+EOF
