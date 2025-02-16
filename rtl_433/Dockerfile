@@ -52,4 +52,4 @@ RUN PYTHONPATH=/usr/local/lib/python3.8/dist-packages /usr/local/bin/rtl_433 -V
 RUN chmod a+x /etc/services.d/rtl_433_discover/run
 
 ENTRYPOINT ["/init"]
-EOF
+
