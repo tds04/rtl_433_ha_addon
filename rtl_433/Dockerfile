@@ -38,22 +38,19 @@ RUN apk add --no-cache libusb \
 WORKDIR /root
 COPY --from=builder /build/root/ /
 
-# Install required packages
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+# Use apk for Alpine
+RUN apk add --no-cache \
        rtl-sdr \
        libtool \
-       libusb-1.0-0-dev \
+       libusb-dev \
        librtlsdr-dev \
        cmake \
-       build-essential \
-       pkg-config \
+       make gcc g++ musl-dev \
+       pkgconf \
        git \
        python3 \
-       python3-pip \
-       python3-setuptools \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+       py3-pip \
+       py3-setuptools
 
 # Copy script files
 COPY rootfs /
