@@ -38,7 +38,22 @@ RUN apk add --no-cache libusb \
 WORKDIR /root
 COPY --from=builder /build/root/ /
 
-
+# Install required packages
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       rtl-sdr \
+       libtool \
+       libusb-1.0-0-dev \
+       librtlsdr-dev \
+       cmake \
+       build-essential \
+       pkg-config \
+       git \
+       python3 \
+       python3-pip \
+       python3-setuptools \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy script files
 COPY rootfs /
