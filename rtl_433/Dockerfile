@@ -38,7 +38,7 @@ RUN apk add --no-cache libusb \
 WORKDIR /root
 COPY --from=builder /build/root/ /
 
-# Use apk for Alpine
+# Try using Alpine's package for paho-mqtt
 RUN apk add --no-cache \
        rtl-sdr \
        libtool \
@@ -50,10 +50,10 @@ RUN apk add --no-cache \
        git \
        python3 \
        py3-pip \
-       py3-setuptools
+       py3-setuptools \
+       py3-paho-mqtt
        
-RUN pip3 install --upgrade pip && \
-    pip3 install --no-cache-dir paho-mqtt || (echo "Error installing paho-mqtt" && exit 1)
+
 
 # Copy script files
 COPY rootfs /
