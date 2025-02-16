@@ -1,4 +1,5 @@
-ARG BUILD_FROM
+FROM ghcr.io/hassio-addons/debian-base:bookworm
+
 FROM $BUILD_FROM
 
 # Set shell
